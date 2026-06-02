@@ -1,2 +1,2 @@
 #!/bin/bash
-exec docker-entrypoint.sh node current/index.js
+exec docker-entrypoint.sh ghost start
