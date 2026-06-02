@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Aguarda o volume ser montado
+sleep 2
+
 CONFIG_FILE="/var/lib/ghost/config.production.json"
 
 node -e "
