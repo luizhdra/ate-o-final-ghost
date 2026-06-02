@@ -3,14 +3,8 @@ set -e
 
 CONFIG_FILE="/var/lib/ghost/config.production.json"
 
-# Aguarda o config existir (Ghost cria na primeira inicialização)
-# Se não existir ainda, cria um base
-if [ ! -f "$CONFIG_FILE" ]; then
-  echo "{}" > "$CONFIG_FILE"
-fi
-
-# Injeta configuração de email via Node.js
-node -e "
+inject_mail() {
+  node -e "
 const fs = require('fs');
 const path = '$CONFIG_FILE';
 
@@ -21,7 +15,6 @@ try {
   config = {};
 }
 
-// Injeta config de email do Resend via SMTP
 config.mail = {
   transport: 'SMTP',
   from: process.env.MAIL_FROM || 'noreply@ateofinal.com.br',
@@ -37,10 +30,21 @@ config.mail = {
 };
 
 fs.writeFileSync(path, JSON.stringify(config, null, 2));
-console.log('[entrypoint] Mail config injected successfully');
-console.log('[entrypoint] From:', config.mail.from);
-console.log('[entrypoint] Host:', config.mail.options.host);
+console.log('[entrypoint] Mail config written:', JSON.stringify(config.mail));
 "
+}
 
-# Inicia o Ghost normalmente
-exec docker-entrypoint.sh node current/index.js
+# Injeta antes de iniciar
+inject_mail
+
+# Inicia Ghost em background, aguarda o config ser criado, injeta de novo
+docker-entrypoint.sh node current/index.js &
+GHOST_PID=$!
+
+# Aguarda 5s e injeta novamente (garante que sobrescreve qualquer config do volume)
+sleep 5
+inject_mail
+echo "[entrypoint] Mail config re-injected after volume mount"
+
+# Aguarda o processo Ghost
+wait $GHOST_PID
