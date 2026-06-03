@@ -1,8 +1,13 @@
 #!/bin/bash
 set -e
 
-CONFIG_FILE="/var/lib/ghost/config.production.json"
+SESSION_FILE="/var/lib/ghost/versions/6.43.1/core/server/services/auth/session/session-service.js"
 
+# Patch na linha 392 - substitui só a declaração da função
+sed -i '392s/.*/    async function sendAuthCodeToUser(req, res) { return; }/' "$SESSION_FILE"
+echo "MFA patch applied"
+
+CONFIG_FILE="/var/lib/ghost/config.production.json"
 until [ -f "$CONFIG_FILE" ]; do
   sleep 1
 done
