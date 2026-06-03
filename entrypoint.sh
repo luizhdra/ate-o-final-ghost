@@ -3,6 +3,7 @@ set -e
 
 SESSION_FILE="/var/lib/ghost/versions/6.43.1/core/server/services/auth/session/session-service.js"
 
+# Patch: substitui o corpo da função sendAuthCodeToUser por um retorno vazio
 node -e "
 const fs = require('fs');
 let code = fs.readFileSync('$SESSION_FILE', 'utf8');
@@ -15,7 +16,7 @@ console.log('MFA patch applied');
 "
 
 CONFIG_FILE="/var/lib/ghost/config.production.json"
-until [ -f "\$CONFIG_FILE" ]; do
+until [ -f "$CONFIG_FILE" ]; do
   sleep 1
 done
 
