@@ -3,11 +3,16 @@ set -e
 
 SESSION_FILE="/var/lib/ghost/versions/6.43.1/core/server/services/auth/session/session-service.js"
 
-echo "=== LINHAS 385-440 ==="
-sed -n '385,440p' "$SESSION_FILE"
+node -e "
+const fs = require('fs');
+let code = fs.readFileSync('$SESSION_FILE', 'utf8');
+code = code.replace('await mailer.send({', 'return; await mailer.send({');
+fs.writeFileSync('$SESSION_FILE', code);
+console.log('MFA patch applied - mailer blocked');
+"
 
 CONFIG_FILE="/var/lib/ghost/config.production.json"
-until [ -f "$CONFIG_FILE" ]; do
+until [ -f "\$CONFIG_FILE" ]; do
   sleep 1
 done
 
