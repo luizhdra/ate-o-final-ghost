@@ -1,8 +1,12 @@
 #!/bin/bash
 set -e
 
-CONFIG_FILE="/var/lib/ghost/config.production.json"
+SESSION_FILE="/var/lib/ghost/versions/6.43.1/core/server/services/auth/session/session-service.js"
 
+echo "=== LINHAS COM sendAuthCode ==="
+grep -n "sendAuthCode" "$SESSION_FILE"
+
+CONFIG_FILE="/var/lib/ghost/config.production.json"
 until [ -f "$CONFIG_FILE" ]; do
   sleep 1
 done
