@@ -3,13 +3,16 @@ set -e
 
 CONFIG_FILE="/var/lib/ghost/config.production.json"
 
-# Aguarda o volume ser montado e o arquivo existir
+# Desativa verificação de email no login (patch temporário)
+SESSION_FILE="/var/lib/ghost/versions/6.43.1/core/server/services/auth/session/session-service.js"
+if [ -f "$SESSION_FILE" ]; then
+  sed -i 's/await this.sendAuthCodeToUser/\/\/await this.sendAuthCodeToUser/g' "$SESSION_FILE"
+  echo "MFA patch applied"
+fi
+
 until [ -f "$CONFIG_FILE" ]; do
-  echo "Waiting for config file..."
   sleep 1
 done
-
-echo "Config found, injecting mail settings..."
 
 node -e "
 const fs = require('fs');
@@ -21,7 +24,7 @@ c.mail = {
   options: { host: 'smtp.resend.com', port: 465, secure: true, auth: { user: 'resend', pass: process.env.RESEND_API_KEY } }
 };
 fs.writeFileSync('$CONFIG_FILE', JSON.stringify(c));
-console.log('Mail config written:', JSON.stringify(c.mail));
+console.log('Mail config written');
 "
 
 cd /var/lib/ghost
