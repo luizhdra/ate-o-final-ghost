@@ -1,17 +1,17 @@
 #!/bin/bash
 set -e
 
-CONFIG_FILE="/var/lib/ghost/config.production.json"
-
-# Patch mais agressivo - substitui a função inteira de MFA
+# 1. Patch MFA PRIMEIRO (antes de tudo)
 SESSION_FILE="/var/lib/ghost/versions/6.43.1/core/server/services/auth/session/session-service.js"
 if [ -f "$SESSION_FILE" ]; then
-  sed -i 's/sendAuthCodeToUser[^}]*}/sendAuthCodeToUser() { return Promise.resolve(); }/g' "$SESSION_FILE"
   sed -i 's/await this\.sendAuthCodeToUser(.*)/\/\/ mfa disabled/g' "$SESSION_FILE"
-  sed -i 's/this\.sendAuthCodeToUser(.*)/Promise.resolve()/g' "$SESSION_FILE"
   echo "MFA patch applied"
+else
+  echo "SESSION FILE NOT FOUND: $SESSION_FILE"
 fi
 
+# 2. Aguarda volume e injeta mail config
+CONFIG_FILE="/var/lib/ghost/config.production.json"
 until [ -f "$CONFIG_FILE" ]; do
   sleep 1
 done
@@ -29,5 +29,6 @@ fs.writeFileSync('$CONFIG_FILE', JSON.stringify(c));
 console.log('Mail config written');
 "
 
+# 3. Inicia Ghost
 cd /var/lib/ghost
 exec node current/index.js
