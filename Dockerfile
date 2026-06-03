@@ -1,4 +1,4 @@
-FROM ghost:latest
+FROM ghost:5
 
 # Script que injeta a config de email antes do Ghost iniciar
 COPY entrypoint.sh /entrypoint.sh
