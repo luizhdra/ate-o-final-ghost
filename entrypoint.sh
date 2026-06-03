@@ -6,19 +6,10 @@ SESSION_FILE="/var/lib/ghost/versions/6.43.1/core/server/services/auth/session/s
 node -e "
 const fs = require('fs');
 let code = fs.readFileSync('$SESSION_FILE', 'utf8');
-
-// Patch 1: desativa envio do código
 code = code.replace(
   /async function sendAuthCodeToUser\(req, res\) \{[\s\S]*?\n    \}/,
   'async function sendAuthCodeToUser(req, res) { return; }'
 );
-
-// Patch 2: faz a verificação do código sempre passar
-code = code.replace(
-  /async function verifyAuthCode\(req, res\) \{[\s\S]*?\n    \}/,
-  'async function verifyAuthCode(req, res) { return; }'
-);
-
 fs.writeFileSync('$SESSION_FILE', code);
 console.log('MFA patch applied');
 "
